@@ -2,416 +2,565 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS | Arcane Core</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS | Hextech Prime</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js (ГРАФИКИ) -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Three.js (3D ДВИЖОК) -->
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --neon-blue: #00f0ff;
-            --deep-blue: #081018;
+            --deep-blue: #050a14;
+            --glass-border: rgba(0, 240, 255, 0.2);
             --gold: #c8aa6e;
         }
 
         body {
             background-color: var(--deep-blue);
-            background-image: linear-gradient(180deg, #050a10 0%, #0f1c2e 100%);
+            background-image: radial-gradient(circle at 50% -20%, #0f2e4b 0%, #050a14 60%);
             color: #cbd5e1;
             font-family: 'Rajdhani', sans-serif;
             min-height: 100vh;
-            overflow-x: hidden; /* Чтобы canvas не вызывал скролл */
+            overflow-x: hidden;
         }
 
-        /* Typography */
-        h1, h2 { font-family: 'Cinzel', serif; letter-spacing: 2px; }
-
-        /* UI Panels */
-        .arcane-glass {
-            background: rgba(18, 28, 46, 0.6);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(200, 170, 110, 0.15);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-            border-radius: 4px;
-        }
-
-        /* 3D Container Styling */
-        #crystal-container {
-            width: 100px;
-            height: 100px;
+        /* === UI COMPONENTS === */
+        .hex-panel {
+            background: rgba(10, 18, 30, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             position: relative;
-            z-index: 10;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
-        /* Свечение за кристаллом */
-        #crystal-container::after {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px; height: 60px;
+        
+        /* Декоративные уголки как в интерфейсе LoL */
+        .hex-panel::before {
+            content: ''; position: absolute; top: -1px; left: -1px;
+            width: 10px; height: 10px;
+            border-top: 2px solid var(--gold); border-left: 2px solid var(--gold);
+        }
+        .hex-panel::after {
+            content: ''; position: absolute; bottom: -1px; right: -1px;
+            width: 10px; height: 10px;
+            border-bottom: 2px solid var(--gold); border-right: 2px solid var(--gold);
+        }
+
+        /* Текст */
+        h1, h2, .font-cinzel { font-family: 'Cinzel', serif; letter-spacing: 1px; }
+
+        /* === 3D CONTAINER === */
+        #crystal-wrapper {
+            position: relative;
+            width: 120px; height: 120px;
+            filter: drop-shadow(0 0 15px rgba(0, 240, 255, 0.3));
+        }
+        @media (max-width: 768px) {
+            #crystal-wrapper { width: 80px; height: 80px; }
+        }
+
+        /* === TABLE STYLES === */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #050a10; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
+
+        .sticky-col {
+            position: sticky; left: 0; z-index: 20;
+            background: #08101b;
+            border-right: 1px solid var(--glass-border);
+            box-shadow: 4px 0 10px rgba(0,0,0,0.5);
+        }
+
+        th { color: var(--gold); font-weight: 600; font-size: 0.75rem; padding: 12px 4px; }
+        td { border-bottom: 1px solid rgba(255,255,255,0.03); }
+        tr:hover td { background: rgba(0, 240, 255, 0.03); }
+
+        /* CHECKBOXES (Hexagon Shape) */
+        .hex-check {
+            appearance: none; width: 18px; height: 18px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #334155;
+            transform: rotate(45deg);
+            cursor: pointer; transition: all 0.3s;
+        }
+        .hex-check:checked {
             background: var(--neon-blue);
-            opacity: 0.15;
-            filter: blur(25px);
-            z-index: -1;
-            border-radius: 50%;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            transform: rotate(225deg); /* Анимация поворота */
         }
 
-        /* Table Styling */
-        .habit-table th { color: var(--gold); font-weight: normal; padding: 10px; font-size: 0.8rem; }
-        .habit-row { transition: background 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .habit-row:hover { background: rgba(0, 240, 255, 0.05); }
-
-        /* Checkboxes */
-        .check-box {
-            appearance: none; width: 16px; height: 16px;
-            border: 1px solid #475569; background: rgba(0,0,0,0.3);
-            transform: rotate(45deg); cursor: pointer; transition: all 0.2s;
+        /* Buttons */
+        .btn-icon {
+            background: transparent; border: 1px solid #334155; color: #94a3b8;
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
         }
-        .check-box:checked {
-            background: var(--neon-blue); border-color: var(--neon-blue);
-            box-shadow: 0 0 8px var(--neon-blue);
-        }
+        .btn-icon:hover { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 8px rgba(0,240,255,0.3); }
 
-        /* Scrollbar & Sticky Col */
-        .sticky-col { position: sticky; left: 0; z-index: 10; background: #0d1623; border-right: 1px solid rgba(200,170,110,0.1); }
-        ::-webkit-scrollbar { height: 8px; width: 8px; }
-        ::-webkit-scrollbar-track { background: #050a10; }
-        ::-webkit-scrollbar-thumb { background: #334155; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+        .btn-main {
+            background: linear-gradient(45deg, #0f2e4b, #050a14);
+            border: 1px solid var(--glass-border);
+            color: var(--neon-blue);
+            padding: 8px 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+        .btn-main:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
+
     </style>
 </head>
-<body class="p-4 md:p-8 selection:bg-cyan-500 selection:text-black">
+<body class="p-4 md:p-6 flex flex-col items-center selection:bg-cyan-500 selection:text-black">
 
-    <div class="max-w-[1600px] mx-auto space-y-6">
+    <div class="w-full max-w-[1600px] space-y-6">
         
-        <!-- HEADER -->
-        <header class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-            <div class="flex items-center gap-4">
-                <!-- СЮДА ВСТАВЛЯЕТСЯ 3D -->
-                <div id="crystal-container"></div>
-                
+        <!-- === TOP BAR === -->
+        <header class="flex flex-col md:flex-row justify-between items-center gap-6 mb-4">
+            
+            <!-- LEFT: CRYSTAL & LEVEL -->
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div id="crystal-wrapper"></div> <!-- 3D Canvas Here -->
                 <div>
-                    <h1 class="text-3xl md:text-4xl text-white drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]">NEXUS</h1>
-                    <p class="text-amber-500/80 text-sm tracking-widest uppercase" id="date-display">SYSTEM READY</p>
+                    <h1 class="text-4xl text-white drop-shadow-[0_0_10px_rgba(0,240,255,0.6)]">NEXUS</h1>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="text-amber-400 text-xs font-bold tracking-widest">LVL <span id="lvl-display">1</span></span>
+                        <div class="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div id="xp-bar" class="h-full bg-cyan-400 shadow-[0_0_5px_#00f0ff] transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Mini Tasks -->
-            <div class="arcane-glass p-3 flex items-center gap-3 w-full md:w-auto">
-                <input type="text" id="quick-task" placeholder="Быстрая задача..." class="bg-transparent border-b border-slate-600 text-white outline-none px-2 py-1 w-full md:w-64 focus:border-cyan-400 placeholder-slate-600">
-                <button onclick="addQuickTask()" class="text-cyan-400 hover:text-white hover:shadow-[0_0_10px_#00f0ff] transition px-3"><i class="fa-solid fa-plus"></i></button>
+
+            <!-- RIGHT: CONTROLS -->
+            <div class="flex gap-3 w-full md:w-auto justify-end">
+                <button onclick="exportData()" class="btn-main text-xs flex items-center gap-2" title="Скачать JSON">
+                    <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">Backup</span>
+                </button>
+                <button onclick="resetData()" class="btn-icon text-red-400 border-red-900 hover:border-red-500 hover:text-red-500 hover:shadow-red-900/50" title="Сброс">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
             </div>
         </header>
 
-        <!-- MAIN TABLE -->
-        <main class="arcane-glass rounded-none md:rounded-lg overflow-hidden relative">
-            <div class="absolute top-0 left-0 w-full h-1 bg-slate-800">
-                <div id="top-progress" class="h-full bg-cyan-400 shadow-[0_0_10px_#00f0ff] transition-all duration-700" style="width: 0%"></div>
-            </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full border-collapse habit-table min-w-[1000px]">
-                    <thead>
-                        <tr class="bg-[#0a111a]">
-                            <th class="sticky-col text-left pl-4 w-[250px]">
-                                <span class="text-white font-bold tracking-widest">ПРОТОКОЛЫ</span>
-                                <button onclick="addHabit()" class="ml-2 text-cyan-500 hover:text-white text-xs border border-cyan-900 px-1 rounded">+</button>
-                            </th>
-                            <tbody id="days-header-row"></tbody> 
-                        </tr>
-                    </thead>
-                    <tbody id="habit-body"></tbody>
-                </table>
-            </div>
-        </main>
-
-        <!-- CHARTS -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="arcane-glass p-6 flex flex-col justify-between">
-                <div>
-                    <h2 class="text-amber-500 text-sm mb-2">ЭФФЕКТИВНОСТЬ</h2>
-                    <div class="text-5xl font-bold text-white hex-glow" id="total-percent">0%</div>
+        <!-- === DASHBOARD GRID === -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- COL 1: NOTES & STATS (Left Sidebar) -->
+            <aside class="space-y-6 lg:col-span-1 order-2 lg:order-1">
+                
+                <!-- Efficiency Block -->
+                <div class="hex-panel p-6 text-center">
+                    <h3 class="text-slate-500 text-xs uppercase tracking-widest mb-2">Эффективность</h3>
+                    <div class="text-5xl font-bold text-white drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]" id="total-percent">0%</div>
+                    <p class="text-xs text-cyan-500 mt-2">Система работает стабильно</p>
                 </div>
-                <div class="mt-6">
-                    <button onclick="resetAll()" class="text-xs text-red-400 border border-red-900/50 px-4 py-2 w-full hover:bg-red-900/20 transition">СБРОС СИСТЕМЫ</button>
-                </div>
-            </div>
-            <div class="arcane-glass p-4 lg:col-span-2 h-[300px]">
-                <canvas id="activityChart"></canvas>
-            </div>
-        </section>
 
+                <!-- Notes Module -->
+                <div class="hex-panel p-4 flex flex-col h-64">
+                    <div class="flex justify-between items-center mb-2 border-b border-slate-700 pb-2">
+                        <h3 class="text-amber-500 text-xs uppercase font-bold"><i class="fa-solid fa-pen-to-square"></i> Заметки</h3>
+                        <span class="text-[10px] text-slate-500" id="save-status">Saved</span>
+                    </div>
+                    <textarea id="notes-area" class="flex-1 bg-transparent border-none outline-none text-sm text-slate-300 resize-none placeholder-slate-700 custom-scrollbar" placeholder="Введите данные миссии..."></textarea>
+                </div>
+
+            </aside>
+
+
+            <!-- COL 2: MAIN TABLE (Center/Right) -->
+            <main class="hex-panel lg:col-span-3 order-1 lg:order-2 flex flex-col overflow-hidden">
+                
+                <!-- Table Controls -->
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-[#08101b]">
+                    <h2 class="text-white text-lg tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-cyan-500"></i> ПРОТОКОЛЫ
+                    </h2>
+                    <button onclick="addHabit()" class="btn-icon border-cyan-900 text-cyan-500 hover:bg-cyan-900/20"><i class="fa-solid fa-plus"></i></button>
+                </div>
+
+                <!-- Scrollable Table Area -->
+                <div class="overflow-x-auto custom-scrollbar flex-1 bg-[#060b10]">
+                    <table class="w-full border-collapse min-w-[800px]">
+                        <thead>
+                            <tr class="bg-[#0a1522]" id="table-header">
+                                <!-- JS Injected -->
+                            </tr>
+                        </thead>
+                        <tbody id="habit-body">
+                            <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Chart Area (Bottom of Table) -->
+                <div class="h-40 w-full bg-[#050a14] border-t border-slate-800 relative">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </main>
+
+        </div>
     </div>
 
-    <!-- === ЛОГИКА (JAVASCRIPT) === -->
+    <!-- === JAVASCRIPT === -->
     <script>
-        // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ 3D ---
-        let crystalMesh, coreMesh, innerLight;
-        let rotationSpeed = 0.005;
-        let targetSpeed = 0.005;
+        // --- CONFIGURATION ---
+        const STORAGE_KEY = 'nexus_prime_v1';
+        const DAYS = 31; // Можно сделать динамически по текущему месяцу
 
-        // --- 1. THREE.JS (3D КРИСТАЛЛ) ---
-        function initThree() {
-            const container = document.getElementById('crystal-container');
-            const width = container.offsetWidth;
-            const height = container.offsetHeight;
-
-            const scene = new THREE.Scene();
-            // Нет фона, чтобы было прозрачно
-            
-            const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-            camera.position.z = 5;
-
-            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            renderer.setSize(width, height);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(renderer.domElement);
-
-            // --- ГЕОМЕТРИЯ (Разломанная сфера) ---
-            const geometry = new THREE.IcosahedronGeometry(1.6, 1).toNonIndexed();
-            const positionAttribute = geometry.getAttribute('position');
-            const vector = new THREE.Vector3();
-
-            // Логика "разлома" плит
-            for (let i = 0; i < positionAttribute.count; i += 3) {
-                const centerX = (positionAttribute.getX(i) + positionAttribute.getX(i+1) + positionAttribute.getX(i+2)) / 3;
-                const centerY = (positionAttribute.getY(i) + positionAttribute.getY(i+1) + positionAttribute.getY(i+2)) / 3;
-                const centerZ = (positionAttribute.getZ(i) + positionAttribute.getZ(i+1) + positionAttribute.getZ(i+2)) / 3;
-                
-                const shrinkFactor = 0.92; // Размер щелей
-
-                for (let j = 0; j < 3; j++) {
-                    const x = positionAttribute.getX(i + j);
-                    const y = positionAttribute.getY(i + j);
-                    const z = positionAttribute.getZ(i + j);
-                    positionAttribute.setXYZ(i + j, 
-                        centerX + (x - centerX) * shrinkFactor,
-                        centerY + (y - centerY) * shrinkFactor,
-                        centerZ + (z - centerZ) * shrinkFactor
-                    );
-                }
-            }
-            geometry.computeVertexNormals();
-
-            // Материал (Синий металл)
-            const material = new THREE.MeshPhysicalMaterial({
-                color: 0x0044ff, metalness: 0.9, roughness: 0.2,
-                clearcoat: 1.0, flatShading: true, side: THREE.DoubleSide
-            });
-            crystalMesh = new THREE.Mesh(geometry, material);
-            scene.add(crystalMesh);
-
-            // Внутреннее ядро
-            coreMesh = new THREE.Mesh(
-                new THREE.IcosahedronGeometry(1.3, 1),
-                new THREE.MeshBasicMaterial({ color: 0x00ffff })
-            );
-            scene.add(coreMesh);
-
-            // Свет
-            innerLight = new THREE.PointLight(0x00ffff, 1, 10);
-            scene.add(innerLight);
-            
-            const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-            dirLight.position.set(5, 5, 5);
-            scene.add(dirLight);
-            const rimLight = new THREE.PointLight(0xff00ff, 2); // Розовый контур
-            rimLight.position.set(-5, 0, -5);
-            scene.add(rimLight);
-
-            // Анимация
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                // Плавное изменение скорости (инерция)
-                rotationSpeed += (targetSpeed - rotationSpeed) * 0.1;
-
-                crystalMesh.rotation.y += rotationSpeed;
-                crystalMesh.rotation.z += rotationSpeed * 0.5;
-                coreMesh.rotation.y -= rotationSpeed * 1.5;
-
-                // Пульсация
-                const time = Date.now() * 0.002;
-                const pulse = 1 + Math.sin(time) * 0.05;
-                coreMesh.scale.setScalar(pulse);
-                innerLight.intensity = 1.5 + Math.sin(time);
-
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-
-        // --- 2. ПЛАНИРОВЩИК (Logic) ---
-        const STORAGE_KEY = 'nexus_final_v1';
-        const DAYS = 31;
-        let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+        // Default Data Structure
+        const defaultData = {
             habits: [
-                { id: 1, name: "Подъем 06:00", checks: Array(DAYS).fill(false) },
-                { id: 2, name: "Проект NEXUS", checks: Array(DAYS).fill(false) },
-                { id: 3, name: "Спорт", checks: Array(DAYS).fill(false) }
-            ]
+                { id: 1, name: "Ранний подъем", checks: Array(DAYS).fill(false) },
+                { id: 2, name: "Deep Work (2h)", checks: Array(DAYS).fill(false) },
+                { id: 3, name: "Спорт / Зал", checks: Array(DAYS).fill(false) }
+            ],
+            notes: "",
+            xp: 0
         };
-        let chartInstance = null;
 
-        function initApp() {
-            // Запуск 3D
+        let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
+        
+        // --- THREE.JS VARIABLES ---
+        let scene, camera, renderer, crystalMesh, coreMesh, glowLight;
+        let targetRotation = 0.005;
+        let currentRotation = 0.005;
+
+        // ==========================================
+        // 1. CORE LOGIC & UI
+        // ==========================================
+
+        function init() {
             initThree();
-
-            // Дата
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('date-display').innerText = new Date().toLocaleDateString('ru-RU', options).toUpperCase();
-
-            // Рендер
-            renderHeader();
             renderTable();
-            setupChart();
-            updateStats();
+            initChart();
+            updateUI();
+            
+            // Load notes
+            const notesArea = document.getElementById('notes-area');
+            notesArea.value = data.notes || "";
+            notesArea.addEventListener('input', (e) => {
+                data.notes = e.target.value;
+                save(false); // Save without full re-render
+                document.getElementById('save-status').innerText = "Saving...";
+                setTimeout(() => document.getElementById('save-status').innerText = "Saved", 800);
+            });
+
+            // Handle resize for 3D
+            window.addEventListener('resize', onWindowResize, false);
         }
 
-        function renderHeader() {
-            const tr = document.querySelector('thead tr');
-            while (tr.children.length > 1) { tr.removeChild(tr.lastChild); }
-            for(let i=1; i<=DAYS; i++) {
-                const th = document.createElement('th');
-                th.innerText = i;
-                th.className = "text-slate-600 font-mono text-xs w-10";
-                tr.appendChild(th);
+        function save(shouldRender = true) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            if(shouldRender) {
+                updateUI();
+                updateChartData();
             }
-            const thEnd = document.createElement('th');
-            thEnd.innerText = "%"; thEnd.className = "text-cyan-400 w-16";
-            tr.appendChild(thEnd);
         }
+
+        function updateUI() {
+            // Calculate Stats
+            let totalChecks = 0;
+            let totalSlots = data.habits.length * DAYS;
+            data.habits.forEach(h => h.checks.forEach(c => { if(c) totalChecks++ }));
+            
+            const percent = totalSlots === 0 ? 0 : Math.round((totalChecks / totalSlots) * 100);
+            document.getElementById('total-percent').innerText = percent + '%';
+
+            // XP System (Example: 10xp per check)
+            // Recalculate XP based on current checks to avoid bugs
+            const currentXP = totalChecks * 15; 
+            data.xp = currentXP;
+            
+            const level = Math.floor(currentXP / 100) + 1;
+            const xpProgress = currentXP % 100;
+            
+            document.getElementById('lvl-display').innerText = level;
+            document.getElementById('xp-bar').style.width = xpProgress + '%';
+        }
+
+        // ==========================================
+        // 2. TABLE RENDERER
+        // ==========================================
 
         function renderTable() {
+            // Header
+            const headerRow = document.getElementById('table-header');
+            headerRow.innerHTML = `<th class="sticky-col text-left pl-4 w-[200px] z-20">НАЗВАНИЕ</th>`;
+            
+            for(let i=1; i<=DAYS; i++) {
+                headerRow.innerHTML += `<th class="text-center w-8 text-slate-600 font-mono text-[10px]">${i}</th>`;
+            }
+            headerRow.innerHTML += `<th class="text-cyan-500 w-16">%</th>`;
+
+            // Body
             const tbody = document.getElementById('habit-body');
             tbody.innerHTML = '';
+
             data.habits.forEach((habit, hIndex) => {
                 const tr = document.createElement('tr');
-                tr.className = 'habit-row';
+                
+                // Sticky Name Column
                 let html = `
-                    <td class="sticky-col p-3 pl-4 bg-[#09101a] border-r border-slate-800 flex justify-between group">
-                        <span class="text-slate-300 font-medium truncate pr-2">${habit.name}</span>
-                        <i onclick="deleteHabit(${hIndex})" class="fa-solid fa-xmark text-red-900 hover:text-red-500 cursor-pointer opacity-0 group-hover:opacity-100 transition"></i>
-                    </td>`;
-                let doneCount = 0;
-                for(let d=0; d<DAYS; d++) {
-                    const checked = habit.checks[d];
-                    if(checked) doneCount++;
-                    html += `<td class="text-center p-0"><input type="checkbox" class="check-box" ${checked ? 'checked' : ''} onchange="toggleCheck(${hIndex}, ${d})"></td>`;
-                }
-                const percent = Math.round((doneCount / DAYS) * 100);
-                html += `<td class="text-center text-xs font-mono text-cyan-500">${percent}%</td>`;
+                    <td class="sticky-col p-3 bg-[#08101b] border-r border-slate-800 group">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-300 font-medium truncate w-32 text-sm">${habit.name}</span>
+                            <button onclick="deleteHabit(${hIndex})" class="text-slate-700 hover:text-red-500 transition opacity-0 group-hover:opacity-100 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+
+                // Checkboxes
+                let rowChecks = 0;
+                habit.checks.forEach((checked, dIndex) => {
+                    if(checked) rowChecks++;
+                    html += `
+                        <td class="text-center p-0">
+                            <div class="flex justify-center items-center h-full">
+                                <input type="checkbox" class="hex-check" ${checked ? 'checked' : ''} onchange="toggleCheck(${hIndex}, ${dIndex})">
+                            </div>
+                        </td>
+                    `;
+                });
+
+                // Percent
+                const rowPercent = Math.round((rowChecks / DAYS) * 100);
+                html += `<td class="text-center text-xs font-mono text-cyan-400">${rowPercent}%</td>`;
+
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
             });
         }
 
-        function toggleCheck(hIndex, dIndex) {
-            data.habits[hIndex].checks[dIndex] = !data.habits[hIndex].checks[dIndex];
+        // ==========================================
+        // 3. ACTIONS
+        // ==========================================
+
+        function toggleCheck(h, d) {
+            data.habits[h].checks[d] = !data.habits[h].checks[d];
             save();
-            renderTable();
-            updateStats();
             
-            // === ЭФФЕКТ ДЛЯ 3D КРИСТАЛЛА ===
-            // При клике кристалл резко ускоряется (вспышка энергии)
-            targetSpeed = 0.15; 
-            setTimeout(() => { targetSpeed = 0.005; }, 400);
-            
-            if(data.habits[hIndex].checks[dIndex]) {
-                innerLight.intensity = 5; // Яркая вспышка
-            }
+            // 3D Effect: Pulse & Spin
+            targetRotation = 0.2; 
+            setTimeout(() => targetRotation = 0.005, 300);
+            if(data.habits[h].checks[d]) glowLight.intensity = 3;
+            else glowLight.intensity = 0.5;
+            setTimeout(() => glowLight.intensity = 1, 300);
         }
 
         function addHabit() {
-            const name = prompt("Новая цель:");
+            const name = prompt("Название нового протокола:");
             if(name) {
                 data.habits.push({ id: Date.now(), name: name, checks: Array(DAYS).fill(false) });
-                save(); renderTable(); updateStats();
+                save(); renderTable();
             }
         }
 
-        function deleteHabit(index) {
-            if(confirm("Удалить?")) { data.habits.splice(index, 1); save(); renderTable(); updateStats(); }
-        }
-        
-        function addQuickTask() {
-            const val = document.getElementById('quick-task').value;
-            if(val) { alert("Задача записана в протокол: " + val); document.getElementById('quick-task').value = ''; }
+        function deleteHabit(i) {
+            if(confirm("Удалить протокол из базы?")) {
+                data.habits.splice(i, 1);
+                save(); renderTable();
+            }
         }
 
-        function resetAll() {
-             if(confirm("Полный сброс?")) { data.habits.forEach(h => h.checks.fill(false)); save(); renderTable(); updateStats(); }
+        function resetData() {
+            if(confirm("ВНИМАНИЕ: Полный сброс системы. Продолжить?")) {
+                data.habits.forEach(h => h.checks.fill(false));
+                data.xp = 0;
+                save(); renderTable();
+            }
         }
 
-        function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "nexus_backup_" + new Date().toISOString().slice(0,10) + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
 
-        // --- ГРАФИКИ И СТАТИСТИКА ---
-        function updateStats() {
-            let totalChecks = 0;
-            let totalSlots = data.habits.length * DAYS;
-            let dailyData = Array(DAYS).fill(0);
+        // ==========================================
+        // 4. THREE.JS (3D CRYSTAL - FIXED COLORS)
+        // ==========================================
 
-            data.habits.forEach(h => {
-                h.checks.forEach((val, idx) => {
-                    if(val) { totalChecks++; dailyData[idx]++; }
-                });
+        function initThree() {
+            const wrapper = document.getElementById('crystal-wrapper');
+            const w = wrapper.offsetWidth;
+            const h = wrapper.offsetHeight;
+
+            scene = new THREE.Scene();
+            // Fog to blend with background
+            // scene.fog = new THREE.FogExp2(0x050a14, 0.05);
+
+            camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+            camera.position.z = 6;
+
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            wrapper.appendChild(renderer.domElement);
+
+            // --- CRYSTAL GEOMETRY (Exploded Sphere) ---
+            const geo = new THREE.IcosahedronGeometry(1.8, 1).toNonIndexed();
+            const pos = geo.getAttribute('position');
+            
+            // Explode logic
+            const center = new THREE.Vector3();
+            for(let i=0; i<pos.count; i+=3){
+                center.set(0,0,0);
+                for(let j=0; j<3; j++){
+                    center.add(new THREE.Vector3(pos.getX(i+j), pos.getY(i+j), pos.getZ(i+j)));
+                }
+                center.divideScalar(3);
+                
+                const shrink = 0.90; // Щели
+                for(let j=0; j<3; j++){
+                    pos.setXYZ(i+j, 
+                        center.x + (pos.getX(i+j)-center.x)*shrink,
+                        center.y + (pos.getY(i+j)-center.y)*shrink,
+                        center.z + (pos.getZ(i+j)-center.z)*shrink
+                    );
+                }
+            }
+            geo.computeVertexNormals();
+
+            // --- MATERIAL (Blue Hextech Glass) ---
+            const mat = new THREE.MeshPhysicalMaterial({
+                color: 0x0066ff,      // Deep Blue base
+                emissive: 0x001133,   // Slight blue glow
+                roughness: 0.1,
+                metalness: 0.9,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                flatShading: true,
+                transparent: true,
+                opacity: 0.95
             });
 
-            const globalPercent = totalSlots === 0 ? 0 : Math.round((totalChecks / totalSlots) * 100);
-            document.getElementById('total-percent').innerText = globalPercent + '%';
-            document.getElementById('top-progress').style.width = globalPercent + '%';
-            
-            updateChart(dailyData);
+            crystalMesh = new THREE.Mesh(geo, mat);
+            scene.add(crystalMesh);
+
+            // --- CORE (The Energy Inside) ---
+            coreMesh = new THREE.Mesh(
+                new THREE.IcosahedronGeometry(1.2, 0),
+                new THREE.MeshBasicMaterial({ color: 0x00ffff }) // Pure Cyan
+            );
+            scene.add(coreMesh);
+
+            // --- LIGHTING (NO PINK!) ---
+            glowLight = new THREE.PointLight(0x00ffff, 1, 20);
+            scene.add(glowLight);
+
+            const blueLight = new THREE.DirectionalLight(0x0088ff, 3); // Blue side light
+            blueLight.position.set(5, 5, 5);
+            scene.add(blueLight);
+
+            const rimLight = new THREE.PointLight(0x00ffff, 2); // Cyan rim light (WAS PINK)
+            rimLight.position.set(-5, 0, -5);
+            scene.add(rimLight);
+
+            animate();
         }
 
-        function setupChart() {
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Smooth rotation transition
+            currentRotation += (targetRotation - currentRotation) * 0.1;
+            
+            crystalMesh.rotation.y += currentRotation;
+            crystalMesh.rotation.z += currentRotation * 0.5;
+            
+            // Counter-rotate core
+            coreMesh.rotation.y -= currentRotation * 1.5;
+
+            // Idle pulse
+            const time = Date.now() * 0.0015;
+            const pulse = 1 + Math.sin(time) * 0.05;
+            coreMesh.scale.setScalar(pulse);
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const wrapper = document.getElementById('crystal-wrapper');
+            if(!wrapper) return;
+            camera.aspect = wrapper.offsetWidth / wrapper.offsetHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(wrapper.offsetWidth, wrapper.offsetHeight);
+        }
+
+        // ==========================================
+        // 5. CHART (Graph)
+        // ==========================================
+        
+        let chartInstance;
+
+        function initChart() {
             const ctx = document.getElementById('activityChart').getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(0, 240, 255, 0.4)');
-            gradient.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+            const grad = ctx.createLinearGradient(0, 0, 0, 160);
+            grad.addColorStop(0, 'rgba(0, 240, 255, 0.3)');
+            grad.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
 
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: Array.from({length: DAYS}, (_, i) => i + 1),
                     datasets: [{
-                        data: [],
+                        data: calculateDailyData(),
                         borderColor: '#00f0ff',
-                        backgroundColor: gradient,
+                        backgroundColor: grad,
                         borderWidth: 2,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 3,
+                        pointRadius: 2,
                         pointBackgroundColor: '#000',
                         pointBorderColor: '#00f0ff'
                     }]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-                        x: { grid: { display: false }, ticks: { color: '#64748b', maxTicksLimit: 10 } }
-                    }
+                        y: { display: false, min: 0 },
+                        x: { display: false }
+                    },
+                    layout: { padding: 0 }
                 }
             });
         }
 
-        function updateChart(newData) {
-            if(chartInstance) { chartInstance.data.datasets[0].data = newData; chartInstance.update(); }
+        function calculateDailyData() {
+            let arr = Array(DAYS).fill(0);
+            data.habits.forEach(h => h.checks.forEach((c, i) => { if(c) arr[i]++ }));
+            return arr;
         }
 
-        // Start
-        initApp();
+        function updateChartData() {
+            if(chartInstance) {
+                chartInstance.data.datasets[0].data = calculateDailyData();
+                chartInstance.update();
+            }
+        }
+
+        // START SYSTEM
+        init();
 
     </script>
 </body>
