@@ -1,200 +1,104 @@
-:root {
-    /* Modern Theme (Default) */
-    --bg-color: #f0f2f5;
-    --dot-color: #cbd5e0;
-    --ui-bg: #ffffff;
-    --ui-text: #333;
-    --ui-border: #e1e4e8;
-    --shadow: 0 4px 12px rgba(0,0,0,0.1);
-    --accent: #3b82f6;
-    
-    --note-bg: #fff9c4;
-    --note-text: #2d3748;
-    
-    --font-ui: 'Inter', sans-serif;
-    --font-note: 'Inter', sans-serif;
-    
-    --line-color: #ef4444;
-}
-
-/* Noir Theme Override */
-body.noir-theme {
-    --bg-color: #111;
-    --dot-color: #333;
-    --ui-bg: #1a1a1a;
-    --ui-text: #ccc;
-    --ui-border: #444;
-    --shadow: 0 10px 30px rgba(0,0,0,0.8);
-    --accent: #d32f2f;
-    
-    --note-bg: #e6d5b8; /* Старая бумага */
-    --note-text: #000;
-    
-    --font-ui: 'Special Elite', monospace;
-    --font-note: 'Special Elite', monospace;
-    
-    /* Эффект виньетки для фона */
-    background-image: radial-gradient(circle, transparent 40%, #000 100%);
-}
-
+/* Base settings */
 body {
-    margin: 0;
-    overflow: hidden;
-    background-color: var(--bg-color);
-    /* Сетка точек */
-    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
-    background-size: 20px 20px;
-    font-family: var(--font-ui);
-    transition: background 0.3s, color 0.3s;
+    background-color: #0f172a;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+    background-size: cover;
+    background-attachment: fixed;
 }
 
-/* Toolbar */
-.toolbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    background: var(--ui-bg);
-    border-bottom: 1px solid var(--ui-border);
+/* Glassmorphism Effect */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation Items */
+.nav-item {
     display: flex;
     align-items: center;
-    padding: 0 20px;
-    box-sizing: border-box;
-    z-index: 1000;
-    box-shadow: var(--shadow);
+    padding: 12px;
+    border-radius: 12px;
+    color: #94a3b8;
+    transition: all 0.3s ease;
+    text-decoration: none;
 }
 
-.brand { font-weight: 600; margin-right: 40px; color: var(--ui-text); }
-
-.tools { display: flex; gap: 10px; align-items: center; }
-
-button {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--ui-text);
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.nav-item:hover, .nav-item.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateX(5px);
 }
 
-button:hover { background: rgba(0,0,0,0.05); }
-body.noir-theme button:hover { background: rgba(255,255,255,0.1); }
-
-button.active {
-    background: var(--accent);
-    color: white;
+.nav-item.active i {
+    color: #818cf8;
 }
 
-.danger { color: #ef4444; }
-.divider { width: 1px; height: 24px; background: var(--ui-border); margin: 0 10px; }
-.settings { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--ui-text);}
-
-/* Board */
-.board {
-    width: 100vw;
-    height: calc(100vh - 60px);
-    margin-top: 60px;
-    position: relative;
-    overflow: hidden;
-}
-
-svg#connections {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 0;
-}
-
-/* Draggable Item */
-.item {
-    position: absolute;
-    min-width: 200px;
-    min-height: 100px;
-    background: var(--note-bg);
-    box-shadow: var(--shadow);
-    padding: 15px;
-    color: var(--note-text);
-    font-family: var(--font-note);
-    border-radius: 2px;
-    user-select: none;
-    /* cursor: grab; */ /* Управляется JS */
-    transition: box-shadow 0.2s, border 0.2s;
-}
-
-/* Контент редактируемый */
-.content {
-    outline: none;
-    min-height: 60px;
-    cursor: text;
-}
-.content img { max-width: 100%; pointer-events: none; display: block; margin-bottom: 10px;}
-
-/* Нуарный стиль фото */
-body.noir-theme .item img {
-    filter: sepia(30%) contrast(120%) grayscale(20%);
-    border: 5px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-/* Ручки управления элементом */
-.resize-handle { display: none; } /* Можно добавить позже */
-
-.rotate-handle {
-    position: absolute;
-    top: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 10px;
-    height: 10px;
-    background: var(--accent);
+/* Habits Circles */
+.habit-circle {
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
-    cursor: grab;
-    z-index: 20;
-    opacity: 0; /* Показываем только при ховере */
-    transition: opacity 0.2s;
-}
-.rotate-handle::after {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 4px;
-    width: 2px;
-    height: 15px;
-    background: var(--accent);
-}
-
-.item:hover .rotate-handle { opacity: 1; }
-.item.selected { outline: 2px solid var(--accent); z-index: 100; }
-
-/* Popup Editor */
-.text-editor-popup {
-    position: absolute;
-    background: var(--ui-bg);
-    border: 1px solid var(--ui-border);
-    box-shadow: var(--shadow);
-    padding: 5px;
-    border-radius: 6px;
+    background: rgba(255,255,255,0.05);
     display: flex;
-    gap: 5px;
-    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #64748b;
 }
-.text-editor-popup.hidden { display: none; }
-.text-editor-popup button { padding: 5px; font-size: 12px; }
-.divider-v { width: 1px; background: var(--ui-border); }
 
-/* Toggle Switch CSS */
-.switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: #2196F3; }
-input:checked + .slider:before { transform: translateX(20px); }
+.habit-circle:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.habit-circle.done {
+    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+}
+
+/* Task Item */
+.task-card {
+    background: rgba(30, 41, 59, 0.6);
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid #64748b;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.task-card:hover {
+    background: rgba(51, 65, 85, 0.8);
+    transform: translateY(-2px);
+}
+
+.task-card.high-priority { border-left-color: #ef4444; }
+.task-card.medium-priority { border-left-color: #f59e0b; }
+.task-card.low-priority { border-left-color: #3b82f6; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
