@@ -1,0 +1,154 @@
+:root {
+    --bg-color: #1a1a1a;
+    --paper-color: #f4e4bc;
+    --text-color: #111;
+    --string-color: #d00;
+    --shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(circle, #2a2a2a 0%, #000000 100%);
+    font-family: 'Special Elite', monospace; /* Шрифт печатной машинки */
+    overflow: hidden;
+    color: #ccc;
+}
+
+/* Интерфейс управления */
+.ui-controls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.6);
+    border-bottom-right-radius: 10px;
+    border: 1px solid #444;
+}
+
+h1 { margin: 0 0 10px 0; color: #fff; letter-spacing: 2px; }
+
+button {
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 8px 15px;
+    font-family: 'Special Elite', monospace;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover { background: #555; }
+button.active { background: var(--string-color); border-color: red; }
+button.danger { color: #ff6b6b; border-color: #ff6b6b; }
+.hint { font-size: 12px; color: #888; margin-top: 10px; max-width: 300px;}
+
+/* Доска */
+.board {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Слой линий */
+svg#connections {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none; /* Чтобы кликать сквозь линии */
+}
+
+/* Элементы (Улики) */
+.item {
+    position: absolute;
+    cursor: grab;
+    z-index: 10;
+    transition: transform 0.1s, box-shadow 0.2s;
+    user-select: none;
+}
+
+.item:active {
+    cursor: grabbing;
+    z-index: 100; /* Поднимаем при перетаскивании */
+}
+
+/* Стиль заметки (Листок бумаги) */
+.note {
+    background: var(--paper-color);
+    color: var(--text-color);
+    width: 200px;
+    padding: 15px;
+    box-shadow: var(--shadow);
+    font-size: 14px;
+    transform: rotate(-2deg);
+}
+
+.note textarea {
+    width: 100%;
+    height: 80px;
+    background: transparent;
+    border: none;
+    resize: none;
+    font-family: 'Special Elite', monospace;
+    outline: none;
+}
+
+/* Стиль фото (Полароид) */
+.photo {
+    background: #fff;
+    padding: 10px 10px 40px 10px; /* Снизу место для подписи */
+    width: 180px;
+    box-shadow: var(--shadow);
+    transform: rotate(3deg);
+    text-align: center;
+}
+
+.photo img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: grayscale(40%) contrast(120%); /* Нуарный фильтр */
+    pointer-events: none;
+}
+
+.photo input {
+    margin-top: 10px;
+    border: none;
+    border-bottom: 1px solid #999;
+    text-align: center;
+    font-family: 'Special Elite', monospace;
+    width: 90%;
+    outline: none;
+}
+
+/* Кнопка удаления на элементе */
+.delete-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #d00;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    display: none;
+}
+
+.item:hover .delete-btn { display: block; }
+
+/* Выделение для создания связи */
+.item.selected {
+    outline: 2px dashed var(--string-color);
+    box-shadow: 0 0 15px var(--string-color);
+}
