@@ -3,111 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS | Personal OS</title>
-    <!-- Tailwind CSS -->
+    <title>NEXUS | Планировщик</title>
+    
+    <!-- Иконка сайта (чтобы не было ошибки favicon 404) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
+
+    <!-- Подключаем Tailwind CSS (для стилей) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Icons -->
+    
+    <!-- Подключаем иконки -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="bg-gray-900 text-gray-100 font-inter selection:bg-indigo-500 selection:text-white">
 
-    <div class="flex h-screen overflow-hidden">
+    <!-- НАШИ СТИЛИ (CSS) -->
+    <style>
+        /* Фон и базы */
+        body {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            background-size: cover;
+            background-attachment: fixed;
+            color: #f3f4f6;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Эффект стекла */
+        .glass {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Скроллбар */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+        /* Анимации */
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        <!-- Sidebar (Navigation) -->
-        <aside class="w-64 glass-panel m-4 mr-0 rounded-2xl flex flex-col justify-between p-6 hidden md:flex">
+        .task-check:checked + span {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4 selection:bg-indigo-500 selection:text-white">
+
+    <!-- Контейнер -->
+    <main class="w-full max-w-4xl">
+        
+        <!-- Шапка -->
+        <header class="glass rounded-2xl p-6 mb-6 flex justify-between items-end fade-in">
             <div>
-                <h1 class="text-2xl font-bold tracking-tighter mb-8"><i class="fa-solid fa-cube text-indigo-500 mr-2"></i>NEXUS</h1>
-                <nav class="space-y-4">
-                    <a href="#" class="nav-item active"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a>
-                    <a href="#" class="nav-item"><i class="fa-solid fa-list-check w-6"></i> Задачи</a>
-                    <a href="#" class="nav-item"><i class="fa-solid fa-calendar w-6"></i> Календарь</a>
-                    <a href="#" class="nav-item"><i class="fa-solid fa-brain w-6"></i> База знаний</a>
-                </nav>
+                <h1 class="text-4xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                    NEXUS
+                </h1>
+                <p id="date-display" class="text-gray-400 mt-1 text-sm font-mono">Загрузка даты...</p>
             </div>
-            <div class="p-4 bg-white/5 rounded-xl border border-white/10">
-                <p class="text-xs text-gray-400 uppercase mb-2">Статус системы</p>
-                <div class="flex items-center gap-2 text-sm text-green-400">
-                    <span class="relative flex h-3 w-3">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                    </span>
-                    Online
+            <div class="text-right hidden sm:block">
+                <p class="text-xs text-gray-500 uppercase tracking-widest">Прогресс дня</p>
+                <div class="w-32 h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-indigo-500 w-0 transition-all duration-500"></div>
                 </div>
             </div>
-        </aside>
+        </header>
 
-        <!-- Main Content -->
-        <main class="flex-1 p-4 overflow-y-auto">
-            <!-- Header -->
-            <header class="flex justify-between items-center mb-8 glass-panel p-6 rounded-2xl">
-                <div>
-                    <h2 class="text-3xl font-bold" id="greeting">Загрузка...</h2>
-                    <p class="text-gray-400 text-sm mt-1 font-mono" id="current-date">--.--.----</p>
-                </div>
-                <button id="add-task-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-semibold flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Новая задача
-                </button>
-            </header>
+        <!-- Ввод задачи -->
+        <div class="glass rounded-xl p-4 mb-8 flex gap-4 fade-in" style="animation-delay: 0.1s;">
+            <input type="text" id="task-input" placeholder="Что нужно сделать сегодня?" 
+                class="flex-1 bg-transparent border-none outline-none text-lg text-white placeholder-gray-500 focus:placeholder-gray-400">
+            <button onclick="addTask()" 
+                class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
 
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl"><i class="fa-solid fa-bolt"></i></div>
-                    <h3 class="text-gray-400 text-sm uppercase font-semibold">Фокус дня</h3>
-                    <p class="text-2xl font-bold mt-2 text-white">Завершить проект NEXUS</p>
-                    <div class="mt-4 h-1 w-full bg-gray-700 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-[75%]"></div>
-                    </div>
-                </div>
-
-                <div class="glass-panel p-6 rounded-2xl">
-                    <h3 class="text-gray-400 text-sm uppercase font-semibold mb-3">Трекер привычек</h3>
-                    <div class="flex justify-between items-center">
-                        <div class="habit-circle done"><i class="fa-solid fa-droplet"></i></div>
-                        <div class="habit-circle done"><i class="fa-solid fa-book"></i></div>
-                        <div class="habit-circle"><i class="fa-solid fa-dumbbell"></i></div>
-                        <div class="habit-circle"><i class="fa-solid fa-moon"></i></div>
-                    </div>
-                </div>
-
-                <div class="glass-panel p-6 rounded-2xl flex flex-col justify-center">
-                    <h3 class="text-gray-400 text-sm uppercase font-semibold">Продуктивность</h3>
-                    <div class="text-4xl font-bold mt-1 font-mono text-indigo-400">84%</div>
-                    <p class="text-xs text-gray-500 mt-1">Выше среднего на 12%</p>
-                </div>
+        <!-- Списки задач -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Активные -->
+            <div class="glass rounded-2xl p-6 min-h-[300px] fade-in" style="animation-delay: 0.2s;">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-300">
+                    <i class="fa-regular fa-circle"></i> В работе
+                </h2>
+                <ul id="todo-list" class="space-y-3">
+                    <!-- Сюда скрипт добавит задачи -->
+                </ul>
             </div>
 
-            <!-- Task Board -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- To Do -->
-                <section class="glass-panel p-6 rounded-2xl min-h-[400px]">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold flex items-center gap-2"><span class="w-2 h-6 bg-orange-500 rounded-full"></span> В работе</h3>
-                        <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">3 задачи</span>
-                    </div>
-                    <ul id="todo-list" class="space-y-3">
-                        <!-- Tasks will be injected here by JS -->
-                    </ul>
-                </section>
-
-                <!-- Done -->
-                <section class="glass-panel p-6 rounded-2xl min-h-[400px] opacity-80">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-bold flex items-center gap-2"><span class="w-2 h-6 bg-green-500 rounded-full"></span> Завершено</h3>
-                        <button class="text-xs text-gray-500 hover:text-white transition">Очистить</button>
-                    </div>
-                    <ul id="done-list" class="space-y-3">
-                        <!-- Done tasks here -->
-                    </ul>
-                </section>
+            <!-- Завершенные -->
+            <div class="glass rounded-2xl p-6 min-h-[300px] fade-in" style="animation-delay: 0.3s;">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold flex items-center gap-2 text-emerald-300">
+                        <i class="fa-regular fa-circle-check"></i> Готово
+                    </h2>
+                    <button onclick="clearDone()" class="text-xs text-gray-500 hover:text-white transition">Очистить</button>
+                </div>
+                <ul id="done-list" class="space-y-3 opacity-60">
+                    <!-- Сюда попадут выполненные -->
+                </ul>
             </div>
-        </main>
-    </div>
+        </div>
 
-    <script src="script.js"></script>
+    </main>
+
+    <!-- НАШ СКРИПТ (Логика) -->
+    <script>
+        // Предупреждение от Tailwind в консоли можно игнорировать, для простого сайта CDN подходит идеально.
+
+        const todoList = document.getElementById('todo-list');
+        const doneList = document.getElementById('done-list');
+        const input = document.getElementById('task-input');
+        const dateDisplay = document.getElementById('date-display');
+        const progressBar = document.getElementById('progress-bar');
+
+        // Загружаем задачи при старте
+        let tasks = JSON.parse(localStorage.getItem('nexus_tasks')) || [
+            { id: 1, text: 'Создать свой сайт', done: false },
+            { id: 2, text: 'Залить на GitHub', done: false }
+        ];
+
+        function init() {
+            // Установка даты
+            const now = new Date();
+            const options = { weekday: 'long', day: 'numeric', month: 'long' };
+            dateDisplay.textContent = now.toLocaleDateString('ru-RU', options).charAt(0).toUpperCase() + now.toLocaleDateString('ru-RU', options).slice(1);
+            
+            render();
+        }
+
+        function save() {
+            localStorage.setItem('nexus_tasks', JSON.stringify(tasks));
+            render();
+        }
+
+        function addTask() {
+            const text = input.value.trim();
+            if (text) {
+                tasks.unshift({ id: Date.now(), text: text, done: false });
+                input.value = '';
+                save();
+            }
+        }
+
+        // Обработка Enter в поле ввода
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') addTask();
+        });
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.done = !task.done;
+                save();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            save();
+        }
+
+        function clearDone() {
+            if(confirm('Удалить все выполненные задачи?')) {
+                tasks = tasks.filter(t => !t.done);
+                save();
+            }
+        }
+
+        function render() {
+            todoList.innerHTML = '';
+            doneList.innerHTML = '';
+
+            let doneCount = 0;
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `flex justify-between items-center bg-white/5 p-3 rounded-lg hover:bg-white/10 transition group border border-transparent hover:border-white/10`;
+                
+                li.innerHTML = `
+                    <div class="flex items-center gap-3 flex-1 cursor-pointer" onclick="toggleTask(${task.id})">
+                        <div class="w-5 h-5 rounded border ${task.done ? 'bg-emerald-500 border-emerald-500' : 'border-gray-500 group-hover:border-indigo-400'} flex items-center justify-center transition">
+                            ${task.done ? '<i class="fa-solid fa-check text-xs text-white"></i>' : ''}
+                        </div>
+                        <span class="${task.done ? 'line-through text-gray-500' : 'text-gray-200'}">${task.text}</span>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" class="text-gray-600 hover:text-red-400 p-2 opacity-0 group-hover:opacity-100 transition">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+
+                if (task.done) {
+                    doneList.appendChild(li);
+                    doneCount++;
+                } else {
+                    todoList.appendChild(li);
+                }
+            });
+
+            // Обновляем прогресс-бар
+            const total = tasks.length;
+            const percent = total === 0 ? 0 : (doneCount / total) * 100;
+            progressBar.style.width = `${percent}%`;
+            
+            // Цвет прогресс-бара
+            if(percent === 100) progressBar.classList.replace('bg-indigo-500', 'bg-emerald-500');
+            else progressBar.classList.replace('bg-emerald-500', 'bg-indigo-500');
+        }
+
+        init();
+    </script>
 </body>
 </html>
