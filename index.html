@@ -3,428 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS | Hextech OS</title>
+    <title>NEXUS | Arcane Grid</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js (ГРАФИКИ) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Fonts: Rajdhani (Tech) & Cinzel (Magic/Gold) -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* === ARCANE ATMOSPHERE === */
         :root {
-            --hex-blue: #00f0ff;
-            --hex-dark: #050a14;
+            --neon-blue: #00f0ff;
+            --deep-blue: #081018;
             --gold: #c8aa6e;
-            --zaun-green: #0ac978;
         }
 
         body {
-            background-color: var(--hex-dark);
-            /* Имитация живописного фона Аркейна через градиенты */
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 85% 30%, rgba(200, 170, 110, 0.05) 0%, transparent 50%),
-                linear-gradient(180deg, #050a14 0%, #091121 100%);
-            color: #e2e8f0;
+            background-color: var(--deep-blue);
+            /* Фон: глубокий, но чистый градиент */
+            background-image: linear-gradient(180deg, #050a10 0%, #0f1c2e 100%);
+            color: #cbd5e1;
             font-family: 'Rajdhani', sans-serif;
-            overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        /* Шум/Зерно (Texture) */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 0;
+        /* Заголовки в стиле Аркейн */
+        h1, h2 { font-family: 'Cinzel', serif; letter-spacing: 2px; }
+
+        /* Стеклянные панели */
+        .arcane-glass {
+            background: rgba(18, 28, 46, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(200, 170, 110, 0.15); /* Тонкое золото */
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
         }
 
-        /* === СТИЛИ ИНТЕРФЕЙСА (Hextech Glass) === */
-        .hex-panel {
-            background: rgba(13, 22, 39, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 240, 255, 0.1);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            position: relative;
-            clip-path: polygon(
-                20px 0, 100% 0, 
-                100% calc(100% - 20px), calc(100% - 20px) 100%, 
-                0 100%, 0 20px
-            ); /* Скошенные углы */
+        /* Тот самый кристалл */
+        .hex-crystal {
+            width: 60px; height: 60px;
+            background: var(--neon-blue);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            box-shadow: 0 0 20px var(--neon-blue);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.5s ease;
         }
+        .hex-crystal.low { filter: hue-rotate(180deg); box-shadow: 0 0 20px #ff4d4d; background: #ff4d4d; } /* Красный если мало */
 
-        /* Золотая обводка (Piltover Style) */
-        .gold-border {
-            border: 1px solid rgba(200, 170, 110, 0.3);
-            box-shadow: inset 0 0 10px rgba(200, 170, 110, 0.05);
-        }
-
-        /* Неоновое свечение (Hextech) */
-        .hex-glow {
-            text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
-        }
-        .hex-box-glow {
-            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
-            border-color: rgba(0, 240, 255, 0.4);
-        }
-
-        /* Заголовки */
-        h1, h2, h3 {
-            font-family: 'Cinzel', serif;
-            letter-spacing: 1px;
-        }
-
-        /* === НАВИГАЦИЯ === */
-        .nav-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 3px solid transparent;
-        }
-        .nav-btn:hover, .nav-btn.active {
-            background: linear-gradient(90deg, rgba(0, 240, 255, 0.1) 0%, transparent 100%);
-            border-left-color: var(--hex-blue);
-            color: var(--hex-blue);
-            padding-left: 1.5rem;
-            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
-        }
-
-        /* === СКРОЛЛ === */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #050a14; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 0; border: 1px solid #334155; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--hex-blue); }
-
-        /* === ТАБЛИЦА ПРИВЫЧЕК === */
-        .habit-grid th {
-            font-family: 'Cinzel', serif;
+        /* Таблица */
+        .habit-table th {
             color: var(--gold);
-            font-size: 0.7rem;
+            font-weight: normal;
+            padding: 10px;
+            font-size: 0.8rem;
         }
-        .habit-checkbox {
-            appearance: none;
-            width: 18px; height: 18px;
-            border: 1px solid #334155;
-            background: rgba(0,0,0,0.3);
-            transform: rotate(45deg); /* Ромб */
-            cursor: pointer;
-            transition: all 0.2s;
+        .habit-row { transition: background 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .habit-row:hover { background: rgba(0, 240, 255, 0.05); }
+
+        /* Чекбоксы - ромбики */
+        .check-box {
+            appearance: none; width: 16px; height: 16px;
+            border: 1px solid #475569; background: rgba(0,0,0,0.3);
+            transform: rotate(45deg); cursor: pointer; transition: all 0.2s;
         }
-        .habit-checkbox:checked {
-            background: var(--hex-blue);
-            border-color: var(--hex-blue);
-            box-shadow: 0 0 10px var(--hex-blue);
-        }
-        .habit-row:hover {
-            background: linear-gradient(90deg, transparent, rgba(200,170,110,0.05), transparent);
+        .check-box:checked {
+            background: var(--neon-blue); border-color: var(--neon-blue);
+            box-shadow: 0 0 8px var(--neon-blue);
         }
 
-        /* Анимации */
-        .tab-content { display: none; animation: fadeIn 0.4s ease; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Закрепленная колонка */
+        .sticky-col {
+            position: sticky; left: 0; z-index: 10;
+            background: #0d1623; border-right: 1px solid rgba(200,170,110,0.1);
+        }
 
+        /* Скроллбар */
+        ::-webkit-scrollbar { height: 8px; width: 8px; }
+        ::-webkit-scrollbar-track { background: #050a10; }
+        ::-webkit-scrollbar-thumb { background: #334155; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
     </style>
 </head>
-<body class="h-screen flex overflow-hidden text-lg">
+<body class="p-4 md:p-8 selection:bg-cyan-500 selection:text-black">
 
-    <!-- SIDEBAR -->
-    <aside class="w-20 md:w-64 flex flex-col border-r border-slate-800 bg-black/20 backdrop-blur-md z-10">
-        <div class="p-6 flex items-center gap-3">
-            <i class="fa-solid fa-gem text-3xl text-cyan-400 animate-pulse"></i>
-            <span class="hidden md:block text-2xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-600 hex-glow">NEXUS</span>
-        </div>
-
-        <nav class="flex-1 mt-8 space-y-2">
-            <button onclick="switchTab('dashboard')" class="nav-btn active w-full text-left px-6 py-4 text-slate-400 flex items-center gap-4">
-                <i class="fa-solid fa-chart-simple w-6 text-center"></i> <span class="hidden md:inline">Обзор</span>
-            </button>
-            <button onclick="switchTab('tasks')" class="nav-btn w-full text-left px-6 py-4 text-slate-400 flex items-center gap-4">
-                <i class="fa-solid fa-list-check w-6 text-center"></i> <span class="hidden md:inline">Миссии</span>
-            </button>
-            <button onclick="switchTab('habits')" class="nav-btn w-full text-left px-6 py-4 text-slate-400 flex items-center gap-4">
-                <i class="fa-solid fa-table-cells w-6 text-center"></i> <span class="hidden md:inline">Сетка</span>
-            </button>
-        </nav>
-
-        <div class="p-6 text-xs text-slate-600 font-mono hidden md:block border-t border-slate-800">
-            SYSTEM: ONLINE<br>
-            REGION: PILTOVER<br>
-            V. 2.0
-        </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 overflow-y-auto relative p-4 md:p-10">
+    <div class="max-w-[1600px] mx-auto space-y-6">
         
         <!-- HEADER -->
-        <header class="flex justify-between items-end mb-10 border-b border-slate-800 pb-4">
-            <div>
-                <h2 id="page-title" class="text-4xl text-white mb-1 hex-glow">DASHBOARD</h2>
-                <p class="text-amber-200/60 font-mono text-sm tracking-widest" id="current-date">LOADING DATE...</p>
+        <header class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <div class="flex items-center gap-5">
+                <!-- Живой Кристалл -->
+                <div class="hex-crystal" id="main-crystal">
+                    <i class="fa-solid fa-bolt text-black text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl md:text-4xl text-white drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]">NEXUS</h1>
+                    <p class="text-amber-500/80 text-sm tracking-widest uppercase" id="date-display">SYSTEM READY</p>
+                </div>
             </div>
-            <!-- Кристалл энергии (Прогресс) -->
-            <div class="hidden md:flex items-center gap-4">
-                <div class="text-right">
-                    <p class="text-xs text-cyan-400 uppercase">Energy Level</p>
-                    <p class="text-2xl font-bold text-white" id="energy-val">84%</p>
-                </div>
-                <div class="w-12 h-12 border-2 border-cyan-500/30 rotate-45 flex items-center justify-center shadow-[0_0_15px_rgba(0,240,255,0.2)]">
-                    <div class="w-8 h-8 bg-cyan-400 shadow-[0_0_20px_#00f0ff]" id="energy-core"></div>
-                </div>
+            
+            <!-- Быстрые задачи (Mini Tasks) -->
+            <div class="arcane-glass p-3 flex items-center gap-3 w-full md:w-auto">
+                <input type="text" id="quick-task" placeholder="Быстрая задача..." class="bg-transparent border-b border-slate-600 text-white outline-none px-2 py-1 w-full md:w-64 focus:border-cyan-400">
+                <button onclick="addQuickTask()" class="text-cyan-400 hover:text-white hover:shadow-[0_0_10px_#00f0ff] transition px-3"><i class="fa-solid fa-plus"></i></button>
             </div>
         </header>
 
-        <!-- === TAB 1: DASHBOARD === -->
-        <div id="dashboard" class="tab-content active space-y-6">
-            <!-- Фокус -->
-            <div class="hex-panel p-8">
-                <h3 class="text-amber-400 text-sm uppercase tracking-[0.2em] mb-4 border-l-2 border-amber-400 pl-3">Главная цель</h3>
-                <input type="text" value="Завершить проект Аркейн" class="bg-transparent text-3xl md:text-5xl font-bold text-white outline-none w-full placeholder-slate-600" spellcheck="false">
+        <!-- MAIN GRID (EXCEL STYLE) -->
+        <main class="arcane-glass rounded-none md:rounded-lg overflow-hidden relative">
+            <div class="absolute top-0 left-0 w-full h-1 bg-slate-800">
+                <div id="top-progress" class="h-full bg-cyan-400 shadow-[0_0_10px_#00f0ff] transition-all duration-700" style="width: 0%"></div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="hex-panel p-6 gold-border">
-                    <h3 class="text-slate-400 mb-4 text-sm">Ближайшие миссии</h3>
-                    <ul id="dashboard-tasks" class="space-y-3 text-sm">
-                        <!-- JS inject -->
-                    </ul>
-                </div>
-                <div class="hex-panel p-6 gold-border relative overflow-hidden">
-                    <div class="absolute -right-10 -bottom-10 text-9xl opacity-5 text-cyan-500 rotate-12"><i class="fa-solid fa-quote-right"></i></div>
-                    <h3 class="text-slate-400 mb-2 text-sm">Мысль дня</h3>
-                    <p class="text-xl italic text-amber-100 leading-relaxed">"In the pursuit of great, we failed to do good."</p>
-                    <p class="text-right text-amber-400/60 mt-4">— Viktor</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- === TAB 2: TASKS (MISSIONS) === -->
-        <div id="tasks" class="tab-content">
-            <div class="flex gap-4 mb-6">
-                <input type="text" id="new-task-input" placeholder="Новая директива..." class="flex-1 bg-black/30 border border-slate-700 text-white px-4 py-3 outline-none focus:border-cyan-400 focus:shadow-[0_0_10px_rgba(0,240,255,0.2)] transition">
-                <button onclick="addTask()" class="bg-cyan-900/50 border border-cyan-500 text-cyan-400 px-6 hover:bg-cyan-500 hover:text-black transition uppercase font-bold tracking-wider">
-                    <i class="fa-solid fa-bolt"></i>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Active -->
-                <div>
-                    <h3 class="text-cyan-400 border-b border-cyan-900/50 pb-2 mb-4 uppercase text-sm tracking-widest">В работе</h3>
-                    <ul id="active-tasks-list" class="space-y-3"></ul>
-                </div>
-                <!-- Done -->
-                <div>
-                    <h3 class="text-emerald-500 border-b border-emerald-900/50 pb-2 mb-4 uppercase text-sm tracking-widest">Архив</h3>
-                    <ul id="done-tasks-list" class="space-y-3 opacity-60"></ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- === TAB 3: HABIT GRID === -->
-        <div id="habits" class="tab-content">
-            <div class="hex-panel p-4 overflow-x-auto">
-                <div class="flex justify-between mb-4">
-                    <button onclick="addHabit()" class="text-xs text-cyan-400 border border-cyan-900 px-3 py-1 hover:bg-cyan-900/30">+ ПРИВЫЧКА</button>
-                    <button onclick="clearHabits()" class="text-xs text-red-400 border border-red-900 px-3 py-1 hover:bg-red-900/30">СБРОС</button>
-                </div>
-                <table class="w-full border-collapse habit-grid">
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse habit-table min-w-[1000px]">
                     <thead>
-                        <tr id="habit-header-row">
-                            <th class="text-left p-3 min-w-[150px] sticky left-0 bg-[#0d1627] z-10 border-r border-slate-800">ПРОТОКОЛЫ</th>
-                            <!-- JS Days -->
+                        <tr class="bg-[#0a111a]">
+                            <th class="sticky-col text-left pl-4 w-[250px]">
+                                <span class="text-white font-bold tracking-widest">ПРИВЫЧКИ / ЦЕЛИ</span>
+                                <button onclick="addHabit()" class="ml-2 text-cyan-500 hover:text-white text-xs border border-cyan-900 px-1 rounded">+</button>
+                            </th>
+                            <!-- Дни генерируются JS -->
+                            <tbody id="days-header-row"></tbody> 
                         </tr>
                     </thead>
                     <tbody id="habit-body">
-                        <!-- JS Rows -->
+                        <!-- Строки генерируются JS -->
                     </tbody>
                 </table>
             </div>
-        </div>
+        </main>
 
-    </main>
+        <!-- CHART SECTION (Диаграммы вернулись!) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Инфо панель -->
+            <div class="arcane-glass p-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-amber-500 text-sm mb-2">ОБЩАЯ ЭФФЕКТИВНОСТЬ</h2>
+                    <div class="text-5xl font-bold text-white hex-glow" id="total-percent">0%</div>
+                </div>
+                <div class="mt-6">
+                    <button onclick="resetAll()" class="text-xs text-red-400 border border-red-900/50 px-4 py-2 w-full hover:bg-red-900/20 transition">СБРОС СИСТЕМЫ</button>
+                </div>
+            </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+            <!-- График -->
+            <div class="arcane-glass p-4 lg:col-span-2 h-[300px]">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ЛОГИКА -->
     <script>
-        // DATA STORE
-        const STORAGE_KEY = 'nexus_arcane_data';
-        let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-            tasks: [
-                { id: 1, text: 'Изучить чертежи Хекстека', done: false },
-                { id: 2, text: 'Встреча в Совете', done: true }
-            ],
+        // === CONFIG ===
+        const STORAGE_KEY = 'nexus_arcane_v2';
+        const DAYS = 31;
+        
+        // Данные по умолчанию
+        const defaultData = {
             habits: [
-                { id: 1, name: 'Медитация', checks: Array(31).fill(false) },
-                { id: 2, name: 'Спорт (Zaun Style)', checks: Array(31).fill(false) }
+                { id: 1, name: "Встать до 08:00", checks: Array(DAYS).fill(false) },
+                { id: 2, name: "Code / Work (2h)", checks: Array(DAYS).fill(false) },
+                { id: 3, name: "Спорт / Зал", checks: Array(DAYS).fill(false) },
+                { id: 4, name: "Чтение", checks: Array(DAYS).fill(false) }
             ]
         };
 
-        // INITIALIZATION
+        let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
+        let chartInstance = null;
+
+        // === INIT ===
         function init() {
-            updateDate();
-            renderTasks();
-            renderHabits();
-            updateEnergy();
+            setupDate();
+            renderHeader();
+            renderTable();
+            setupChart();
+            updateStats();
         }
 
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            updateEnergy();
+        // === RENDER ===
+        function setupDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('date-display').innerText = new Date().toLocaleDateString('ru-RU', options).toUpperCase();
         }
 
-        // UI LOGIC
-        function switchTab(tabId) {
-            // Hide all
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            
-            // Show active
-            document.getElementById(tabId).classList.add('active');
-            // Find button (simplified)
-            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(tabId));
-            if(btn) btn.classList.add('active');
+        function renderHeader() {
+            // Вставляем заголовки дней прямо в thead > tr, но хитро, так как sticky col уже там
+            const tr = document.querySelector('thead tr');
+            // Очищаем всё после первого элемента (sticky col)
+            while (tr.children.length > 1) { tr.removeChild(tr.lastChild); }
 
-            // Update Title
-            const titles = { 'dashboard': 'DASHBOARD', 'tasks': 'MISSIONS', 'habits': 'THE GRID' };
-            document.getElementById('page-title').innerText = titles[tabId];
+            for(let i=1; i<=DAYS; i++) {
+                const th = document.createElement('th');
+                th.innerText = i;
+                th.className = "text-slate-600 font-mono text-xs w-10";
+                tr.appendChild(th);
+            }
+            // Колонка Итог
+            const thEnd = document.createElement('th');
+            thEnd.innerText = "%";
+            thEnd.className = "text-cyan-400 w-16";
+            tr.appendChild(thEnd);
         }
 
-        function updateDate() {
-            const now = new Date();
-            document.getElementById('current-date').innerText = now.toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
-        }
+        function renderTable() {
+            const tbody = document.getElementById('habit-body');
+            tbody.innerHTML = '';
 
-        function updateEnergy() {
-            const totalTasks = data.tasks.length;
-            const doneTasks = data.tasks.filter(t => t.done).length;
-            const percent = totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
-            
-            document.getElementById('energy-val').innerText = percent + '%';
-            document.getElementById('energy-core').style.opacity = (0.2 + (percent / 100)).toString();
-        }
+            data.habits.forEach((habit, hIndex) => {
+                const tr = document.createElement('tr');
+                tr.className = 'habit-row';
 
-        // --- TASKS ---
-        function renderTasks() {
-            const activeList = document.getElementById('active-tasks-list');
-            const doneList = document.getElementById('done-tasks-list');
-            const dashList = document.getElementById('dashboard-tasks');
-
-            activeList.innerHTML = '';
-            doneList.innerHTML = '';
-            dashList.innerHTML = '';
-
-            data.tasks.forEach(task => {
-                const li = document.createElement('li');
-                li.className = `p-3 border-l-2 ${task.done ? 'border-emerald-500 bg-emerald-900/10' : 'border-cyan-500 bg-cyan-900/10'} flex justify-between items-center hover:bg-white/5 transition group`;
-                
-                li.innerHTML = `
-                    <span class="${task.done ? 'line-through text-slate-500' : 'text-slate-200'} font-mono cursor-pointer" onclick="toggleTask(${task.id})">
-                        ${task.text}
-                    </span>
-                    <button onclick="deleteTask(${task.id})" class="text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition px-2">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                // 1. Имя (Sticky)
+                let html = `
+                    <td class="sticky-col p-3 pl-4 bg-[#09101a] border-r border-slate-800 flex justify-between group">
+                        <span class="text-slate-300 font-medium truncate pr-2">${habit.name}</span>
+                        <i onclick="deleteHabit(${hIndex})" class="fa-solid fa-xmark text-red-900 hover:text-red-500 cursor-pointer opacity-0 group-hover:opacity-100 transition"></i>
+                    </td>
                 `;
 
-                if (task.done) doneList.appendChild(li);
-                else {
-                    activeList.appendChild(li);
-                    // Add to dashboard (max 3)
-                    if(dashList.children.length < 3) {
-                        const clone = li.cloneNode(true);
-                        // Fix onclick for clone
-                        clone.querySelector('span').onclick = () => toggleTask(task.id);
-                        clone.querySelector('button').onclick = () => deleteTask(task.id);
-                        dashList.appendChild(clone);
+                // 2. Чекбоксы
+                let doneCount = 0;
+                for(let d=0; d<DAYS; d++) {
+                    const checked = habit.checks[d];
+                    if(checked) doneCount++;
+                    html += `
+                        <td class="text-center p-0">
+                            <input type="checkbox" class="check-box" ${checked ? 'checked' : ''} onchange="toggleCheck(${hIndex}, ${d})">
+                        </td>
+                    `;
+                }
+
+                // 3. Процент строки
+                const percent = Math.round((doneCount / DAYS) * 100);
+                html += `<td class="text-center text-xs font-mono text-cyan-500">${percent}%</td>`;
+
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // === LOGIC ===
+        function toggleCheck(hIndex, dIndex) {
+            data.habits[hIndex].checks[dIndex] = !data.habits[hIndex].checks[dIndex];
+            save();
+            renderTable(); // Чтобы обновить % в конце строки
+            updateStats(); // Чтобы обновить график и кристалл
+        }
+
+        function addHabit() {
+            const name = prompt("Название цели / привычки:");
+            if(name) {
+                data.habits.push({ id: Date.now(), name: name, checks: Array(DAYS).fill(false) });
+                save();
+                renderTable();
+                updateStats();
+            }
+        }
+
+        function deleteHabit(index) {
+            if(confirm("Удалить строку?")) {
+                data.habits.splice(index, 1);
+                save();
+                renderTable();
+                updateStats();
+            }
+        }
+
+        function addQuickTask() {
+            const input = document.getElementById('quick-task');
+            if(input.value) {
+                alert("Задача добавлена в память (пока визуально, для примера)");
+                input.value = '';
+            }
+        }
+        
+        function resetAll() {
+             if(confirm("Полный сброс прогресса?")) {
+                 data.habits.forEach(h => h.checks.fill(false));
+                 save();
+                 init();
+             }
+        }
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // === STATS & CHART ===
+        function updateStats() {
+            // Считаем общий прогресс
+            let totalChecks = 0;
+            let totalSlots = data.habits.length * DAYS;
+            let dailyData = Array(DAYS).fill(0);
+
+            data.habits.forEach(h => {
+                h.checks.forEach((val, idx) => {
+                    if(val) {
+                        totalChecks++;
+                        dailyData[idx]++;
+                    }
+                });
+            });
+
+            const globalPercent = totalSlots === 0 ? 0 : Math.round((totalChecks / totalSlots) * 100);
+            
+            // UI Updates
+            document.getElementById('total-percent').innerText = globalPercent + '%';
+            document.getElementById('top-progress').style.width = globalPercent + '%';
+            
+            // Crystal Effect
+            const crystal = document.getElementById('main-crystal');
+            if(globalPercent < 20) crystal.classList.add('low');
+            else crystal.classList.remove('low');
+            crystal.style.boxShadow = `0 0 ${20 + globalPercent}px var(--neon-blue)`;
+
+            // Chart Update
+            updateChart(dailyData);
+        }
+
+        function setupChart() {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            
+            // Градиент для Аркейн стиля
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(0, 240, 255, 0.4)'); // Neon Blue
+            gradient.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: DAYS}, (_, i) => i + 1),
+                    datasets: [{
+                        label: 'Активность',
+                        data: [],
+                        borderColor: '#00f0ff',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#000',
+                        pointBorderColor: '#00f0ff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b' }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#64748b', maxTicksLimit: 10 }
+                        }
                     }
                 }
             });
         }
 
-        function addTask() {
-            const input = document.getElementById('new-task-input');
-            if(input.value.trim()) {
-                data.tasks.unshift({ id: Date.now(), text: input.value, done: false });
-                input.value = '';
-                saveData();
-                renderTasks();
+        function updateChart(newData) {
+            if(chartInstance) {
+                chartInstance.data.datasets[0].data = newData;
+                chartInstance.update();
             }
         }
 
-        function toggleTask(id) {
-            const task = data.tasks.find(t => t.id === id);
-            if(task) { task.done = !task.done; saveData(); renderTasks(); }
-        }
-
-        function deleteTask(id) {
-            data.tasks = data.tasks.filter(t => t.id !== id);
-            saveData(); renderTasks();
-        }
-
-        // --- HABITS (GRID) ---
-        function renderHabits() {
-            const header = document.getElementById('habit-header-row');
-            const body = document.getElementById('habit-body');
-            
-            // Generate Days Header (1-31)
-            header.innerHTML = '<th class="text-left p-3 min-w-[150px] sticky left-0 bg-[#0d1627] z-10 border-r border-slate-800 text-amber-500">ПРОТОКОЛЫ</th>';
-            for(let i=1; i<=31; i++) {
-                header.innerHTML += `<th class="text-center min-w-[40px] text-slate-600 text-xs font-mono">${i}</th>`;
-            }
-
-            // Generate Rows
-            body.innerHTML = '';
-            data.habits.forEach((habit, hIndex) => {
-                const tr = document.createElement('tr');
-                tr.className = 'habit-row border-b border-slate-800/50';
-                
-                let tds = `<td class="p-3 sticky left-0 bg-[#0d1627] z-10 border-r border-slate-800 flex justify-between items-center group">
-                    <span class="text-slate-300 font-bold">${habit.name}</span>
-                    <i onclick="removeHabit(${hIndex})" class="fa-solid fa-trash text-xs text-red-900 cursor-pointer opacity-0 group-hover:opacity-100 hover:text-red-500 transition"></i>
-                </td>`;
-
-                habit.checks.forEach((checked, dIndex) => {
-                    tds += `<td class="text-center p-1">
-                        <input type="checkbox" class="habit-checkbox" ${checked ? 'checked' : ''} onchange="toggleHabit(${hIndex}, ${dIndex})">
-                    </td>`;
-                });
-
-                tr.innerHTML = tds;
-                body.appendChild(tr);
-            });
-        }
-
-        function toggleHabit(hIndex, dIndex) {
-            data.habits[hIndex].checks[dIndex] = !data.habits[hIndex].checks[dIndex];
-            saveData();
-        }
-
-        function addHabit() {
-            const name = prompt("Название протокола:");
-            if(name) {
-                data.habits.push({ id: Date.now(), name: name, checks: Array(31).fill(false) });
-                saveData(); renderHabits();
-            }
-        }
-
-        function removeHabit(index) {
-            if(confirm('Удалить протокол?')) {
-                data.habits.splice(index, 1);
-                saveData(); renderHabits();
-            }
-        }
-
-        function clearHabits() {
-             if(confirm('Сбросить данные сетки?')) {
-                data.habits.forEach(h => h.checks.fill(false));
-                saveData(); renderHabits();
-             }
-        }
-
-        // START
         init();
     </script>
 </body>
