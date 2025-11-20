@@ -3,58 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detective Board Pro</title>
-    <!-- Иконки -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts: Один для UI, другой для Нуара -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Special+Elite&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>NEXUS | Personal OS</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="bg-gray-900 text-gray-100 font-inter selection:bg-indigo-500 selection:text-white">
 
-    <!-- Верхняя панель управления -->
-    <div class="toolbar">
-        <div class="brand">🕵️ DETECTIVE BOARD</div>
-        <div class="tools">
-            <button onclick="createNote()" title="Добавить заметку"><i class="fas fa-sticky-note"></i> Текст</button>
-            <button onclick="triggerPhotoUpload()" title="Загрузить фото"><i class="fas fa-image"></i> Фото</button>
-            <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handlePhotoUpload(this)">
-            
-            <div class="divider"></div>
-            
-            <button id="linkBtn" onclick="toggleLinkMode()" title="Режим связи"><i class="fas fa-project-diagram"></i> Связь</button>
-            
-            <div class="divider"></div>
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar (Navigation) -->
+        <aside class="w-64 glass-panel m-4 mr-0 rounded-2xl flex flex-col justify-between p-6 hidden md:flex">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tighter mb-8"><i class="fa-solid fa-cube text-indigo-500 mr-2"></i>NEXUS</h1>
+                <nav class="space-y-4">
+                    <a href="#" class="nav-item active"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a>
+                    <a href="#" class="nav-item"><i class="fa-solid fa-list-check w-6"></i> Задачи</a>
+                    <a href="#" class="nav-item"><i class="fa-solid fa-calendar w-6"></i> Календарь</a>
+                    <a href="#" class="nav-item"><i class="fa-solid fa-brain w-6"></i> База знаний</a>
+                </nav>
+            </div>
+            <div class="p-4 bg-white/5 rounded-xl border border-white/10">
+                <p class="text-xs text-gray-400 uppercase mb-2">Статус системы</p>
+                <div class="flex items-center gap-2 text-sm text-green-400">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    Online
+                </div>
+            </div>
+        </aside>
 
-            <button onclick="clearBoard()" class="danger"><i class="fas fa-trash"></i> Очистить</button>
-        </div>
-        <div class="settings">
-            <label class="switch">
-                <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
-                <span class="slider round"></span>
-            </label>
-            <span class="theme-label">NOIR MODE</span>
-        </div>
-    </div>
+        <!-- Main Content -->
+        <main class="flex-1 p-4 overflow-y-auto">
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-8 glass-panel p-6 rounded-2xl">
+                <div>
+                    <h2 class="text-3xl font-bold" id="greeting">Загрузка...</h2>
+                    <p class="text-gray-400 text-sm mt-1 font-mono" id="current-date">--.--.----</p>
+                </div>
+                <button id="add-task-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Новая задача
+                </button>
+            </header>
 
-    <!-- Панель форматирования текста (появляется при клике на заметку) -->
-    <div id="textEditor" class="text-editor-popup hidden">
-        <button onclick="formatText('bold')"><i class="fas fa-bold"></i></button>
-        <button onclick="formatText('italic')"><i class="fas fa-italic"></i></button>
-        <button onclick="formatText('underline')"><i class="fas fa-underline"></i></button>
-        <button onclick="formatText('strikethrough')"><i class="fas fa-strikethrough"></i></button>
-        <div class="divider-v"></div>
-        <button onclick="formatText('justifyLeft')"><i class="fas fa-align-left"></i></button>
-        <button onclick="formatText('justifyCenter')"><i class="fas fa-align-center"></i></button>
-        <div class="divider-v"></div>
-        <button onclick="formatText('formatBlock', 'H2')"><b>H</b></button>
-        <input type="color" onchange="formatText('foreColor', this.value)" title="Цвет текста">
-    </div>
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl"><i class="fa-solid fa-bolt"></i></div>
+                    <h3 class="text-gray-400 text-sm uppercase font-semibold">Фокус дня</h3>
+                    <p class="text-2xl font-bold mt-2 text-white">Завершить проект NEXUS</p>
+                    <div class="mt-4 h-1 w-full bg-gray-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-[75%]"></div>
+                    </div>
+                </div>
 
-    <!-- Рабочая область -->
-    <div id="board" class="board">
-        <svg id="connections"></svg>
-        <!-- Элементы добавляются JS-ом -->
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h3 class="text-gray-400 text-sm uppercase font-semibold mb-3">Трекер привычек</h3>
+                    <div class="flex justify-between items-center">
+                        <div class="habit-circle done"><i class="fa-solid fa-droplet"></i></div>
+                        <div class="habit-circle done"><i class="fa-solid fa-book"></i></div>
+                        <div class="habit-circle"><i class="fa-solid fa-dumbbell"></i></div>
+                        <div class="habit-circle"><i class="fa-solid fa-moon"></i></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-2xl flex flex-col justify-center">
+                    <h3 class="text-gray-400 text-sm uppercase font-semibold">Продуктивность</h3>
+                    <div class="text-4xl font-bold mt-1 font-mono text-indigo-400">84%</div>
+                    <p class="text-xs text-gray-500 mt-1">Выше среднего на 12%</p>
+                </div>
+            </div>
+
+            <!-- Task Board -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- To Do -->
+                <section class="glass-panel p-6 rounded-2xl min-h-[400px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold flex items-center gap-2"><span class="w-2 h-6 bg-orange-500 rounded-full"></span> В работе</h3>
+                        <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">3 задачи</span>
+                    </div>
+                    <ul id="todo-list" class="space-y-3">
+                        <!-- Tasks will be injected here by JS -->
+                    </ul>
+                </section>
+
+                <!-- Done -->
+                <section class="glass-panel p-6 rounded-2xl min-h-[400px] opacity-80">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold flex items-center gap-2"><span class="w-2 h-6 bg-green-500 rounded-full"></span> Завершено</h3>
+                        <button class="text-xs text-gray-500 hover:text-white transition">Очистить</button>
+                    </div>
+                    <ul id="done-list" class="space-y-3">
+                        <!-- Done tasks here -->
+                    </ul>
+                </section>
+            </div>
+        </main>
     </div>
 
     <script src="script.js"></script>
