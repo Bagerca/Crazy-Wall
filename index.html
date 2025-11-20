@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS | Планировщик</title>
+    <title>Habit Tracker | NEXUS</title>
     
-    <!-- Иконка сайта (чтобы не было ошибки favicon 404) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
-
-    <!-- Подключаем Tailwind CSS (для стилей) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Подключаем иконки -->
+    <!-- Chart.js (для графика как на видео) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- НАШИ СТИЛИ (CSS) -->
     <style>
-        /* Фон и базы */
+        /* === ОСНОВНОЙ ДИЗАЙН === */
         body {
             background-color: #0f172a;
             background-image: 
@@ -25,198 +22,368 @@
                 radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
             background-size: cover;
             background-attachment: fixed;
-            color: #f3f4f6;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
         }
 
         /* Эффект стекла */
         .glass {
             background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Скроллбар */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-
-        /* Анимации */
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* === ТАБЛИЦА И СКРОЛЛ === */
+        .table-container {
+            overflow-x: auto; /* Горизонтальный скролл */
+            position: relative;
+        }
         
-        .task-check:checked + span {
-            text-decoration: line-through;
-            color: #64748b;
+        /* Стилизация скроллбара */
+        .table-container::-webkit-scrollbar { height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .table-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
         }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            white-space: nowrap;
+        }
+
+        /* Закрепляем первую колонку (Названия привычек) */
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            background: rgba(15, 23, 42, 0.95); /* Непрозрачный фон, чтобы текст не наезжал */
+            z-index: 10;
+            text-align: left;
+            min-width: 200px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* === ЧЕКБОКСЫ === */
+        .custom-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #475569;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+
+        .custom-checkbox:checked {
+            background-color: #6366f1; /* Indigo-500 */
+            border-color: #6366f1;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+        }
+
+        .custom-checkbox:hover { border-color: #818cf8; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-10 px-4 selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen p-4 md:p-8">
 
-    <!-- Контейнер -->
-    <main class="w-full max-w-4xl">
+    <!-- Header -->
+    <header class="max-w-[1400px] mx-auto mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                TREKER | ПРИВЫЧКИ
+            </h1>
+            <p class="text-gray-400 text-sm mt-1" id="month-display">Ноябрь 2023</p>
+        </div>
         
-        <!-- Шапка -->
-        <header class="glass rounded-2xl p-6 mb-6 flex justify-between items-end fade-in">
-            <div>
-                <h1 class="text-4xl font-bold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                    NEXUS
-                </h1>
-                <p id="date-display" class="text-gray-400 mt-1 text-sm font-mono">Загрузка даты...</p>
-            </div>
-            <div class="text-right hidden sm:block">
-                <p class="text-xs text-gray-500 uppercase tracking-widest">Прогресс дня</p>
-                <div class="w-32 h-2 bg-gray-700 rounded-full mt-2 overflow-hidden">
-                    <div id="progress-bar" class="h-full bg-indigo-500 w-0 transition-all duration-500"></div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Ввод задачи -->
-        <div class="glass rounded-xl p-4 mb-8 flex gap-4 fade-in" style="animation-delay: 0.1s;">
-            <input type="text" id="task-input" placeholder="Что нужно сделать сегодня?" 
-                class="flex-1 bg-transparent border-none outline-none text-lg text-white placeholder-gray-500 focus:placeholder-gray-400">
-            <button onclick="addTask()" 
-                class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-semibold transition shadow-lg shadow-indigo-500/30">
-                <i class="fa-solid fa-plus"></i>
+        <!-- Кнопки управления -->
+        <div class="flex gap-3">
+            <button onclick="addNewHabit()" class="glass px-4 py-2 rounded-lg hover:bg-white/10 transition text-sm flex items-center gap-2">
+                <i class="fa-solid fa-plus text-indigo-400"></i> Добавить
+            </button>
+            <button onclick="resetData()" class="glass px-4 py-2 rounded-lg hover:bg-red-500/20 hover:text-red-400 transition text-sm text-gray-400">
+                <i class="fa-solid fa-trash"></i> Сброс
             </button>
         </div>
+    </header>
 
-        <!-- Списки задач -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <!-- Активные -->
-            <div class="glass rounded-2xl p-6 min-h-[300px] fade-in" style="animation-delay: 0.2s;">
-                <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-300">
-                    <i class="fa-regular fa-circle"></i> В работе
-                </h2>
-                <ul id="todo-list" class="space-y-3">
-                    <!-- Сюда скрипт добавит задачи -->
-                </ul>
-            </div>
-
-            <!-- Завершенные -->
-            <div class="glass rounded-2xl p-6 min-h-[300px] fade-in" style="animation-delay: 0.3s;">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold flex items-center gap-2 text-emerald-300">
-                        <i class="fa-regular fa-circle-check"></i> Готово
-                    </h2>
-                    <button onclick="clearDone()" class="text-xs text-gray-500 hover:text-white transition">Очистить</button>
-                </div>
-                <ul id="done-list" class="space-y-3 opacity-60">
-                    <!-- Сюда попадут выполненные -->
-                </ul>
-            </div>
+    <!-- GRID CONTAINER -->
+    <main class="max-w-[1400px] mx-auto glass rounded-2xl overflow-hidden shadow-2xl mb-8">
+        
+        <div class="table-container">
+            <table id="habit-table">
+                <thead>
+                    <tr class="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
+                        <th class="sticky-col p-4">Мои привычки</th>
+                        <!-- Дни генерируются JS -->
+                        <th class="p-4 text-indigo-300 min-w-[100px]">Итог</th>
+                    </tr>
+                </thead>
+                <tbody id="habit-body">
+                    <!-- Строки генерируются JS -->
+                </tbody>
+            </table>
         </div>
 
     </main>
 
-    <!-- НАШ СКРИПТ (Логика) -->
+    <!-- STATS / CHART (Как в видео внизу) -->
+    <section class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Статистика текстом -->
+        <div class="glass rounded-2xl p-6">
+            <h3 class="text-gray-400 text-sm uppercase font-bold mb-4">Эффективность</h3>
+            <div class="flex items-end gap-2">
+                <span id="total-percent" class="text-5xl font-bold text-indigo-400">0%</span>
+                <span class="text-gray-500 mb-2">общий прогресс</span>
+            </div>
+            <div class="mt-4 w-full bg-gray-700 h-1 rounded-full overflow-hidden">
+                <div id="global-progress-bar" class="h-full bg-indigo-500 w-0 transition-all duration-500"></div>
+            </div>
+        </div>
+
+        <!-- График (Chart.js) -->
+        <div class="glass rounded-2xl p-4 lg:col-span-2 flex flex-col">
+            <h3 class="text-gray-400 text-sm uppercase font-bold mb-2 pl-2">Динамика по дням</h3>
+            <div class="flex-1 min-h-[200px]">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- JAVASCRIPT -->
     <script>
-        // Предупреждение от Tailwind в консоли можно игнорировать, для простого сайта CDN подходит идеально.
+        // === КОНФИГУРАЦИЯ ===
+        const DAYS_IN_MONTH = 31; // Можно сделать динамически, но пока статика для простоты
+        const STORAGE_KEY = 'nexus_habits_v1';
 
-        const todoList = document.getElementById('todo-list');
-        const doneList = document.getElementById('done-list');
-        const input = document.getElementById('task-input');
-        const dateDisplay = document.getElementById('date-display');
-        const progressBar = document.getElementById('progress-bar');
-
-        // Загружаем задачи при старте
-        let tasks = JSON.parse(localStorage.getItem('nexus_tasks')) || [
-            { id: 1, text: 'Создать свой сайт', done: false },
-            { id: 2, text: 'Залить на GitHub', done: false }
+        // Дефолтные привычки (как в видео)
+        const defaultHabits = [
+            { id: 1, name: "🌅 Проснуться в 5 утра", checks: Array(DAYS_IN_MONTH).fill(false) },
+            { id: 2, name: "💧 Стакан воды", checks: Array(DAYS_IN_MONTH).fill(false) },
+            { id: 3, name: "📝 Составить план дня", checks: Array(DAYS_IN_MONTH).fill(false) },
+            { id: 4, name: "🏋️ С утра тренировка", checks: Array(DAYS_IN_MONTH).fill(false) },
+            { id: 5, name: "📚 Читать 15 минут", checks: Array(DAYS_IN_MONTH).fill(false) },
+            { id: 6, name: "🚫 Отказ от соцсетей", checks: Array(DAYS_IN_MONTH).fill(false) }
         ];
 
+        let habits = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultHabits;
+        let chartInstance = null;
+
+        // === ИНИЦИАЛИЗАЦИЯ ===
         function init() {
-            // Установка даты
+            // Дата
             const now = new Date();
-            const options = { weekday: 'long', day: 'numeric', month: 'long' };
-            dateDisplay.textContent = now.toLocaleDateString('ru-RU', options).charAt(0).toUpperCase() + now.toLocaleDateString('ru-RU', options).slice(1);
+            const options = { month: 'long', year: 'numeric' };
+            document.getElementById('month-display').textContent = now.toLocaleDateString('ru-RU', options).toUpperCase();
+
+            renderTable();
+            initChart();
+            updateStats();
+        }
+
+        // === ОТРИСОВКА ТАБЛИЦЫ ===
+        function renderTable() {
+            const thead = document.querySelector('#habit-table thead tr');
+            const tbody = document.getElementById('habit-body');
             
-            render();
+            // Очищаем старое (кроме заголовков)
+            // Сброс заголовков до базовых (Привычка + Итог)
+            thead.innerHTML = '<th class="sticky-col p-4">Мои привычки</th>';
+            
+            // 1. Рисуем заголовки дней (1..31)
+            for (let i = 1; i <= DAYS_IN_MONTH; i++) {
+                const th = document.createElement('th');
+                th.className = "text-gray-500 text-[10px] w-10";
+                th.textContent = i;
+                thead.appendChild(th);
+            }
+            // Добавляем "Итог" в конец
+            const thResult = document.createElement('th');
+            thResult.className = "p-4 text-indigo-300 min-w-[100px]";
+            thResult.textContent = "Прогресс";
+            thead.appendChild(thResult);
+
+            // 2. Рисуем строки привычек
+            tbody.innerHTML = '';
+            habits.forEach((habit, hIndex) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-white/5 transition";
+
+                // Колонка имени (Sticky)
+                const tdName = document.createElement('td');
+                tdName.className = "sticky-col font-medium text-gray-300 border-r border-gray-700";
+                tdName.innerHTML = `
+                    <div class="flex justify-between items-center group">
+                        <span>${habit.name}</span>
+                        <button onclick="deleteHabit(${hIndex})" class="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition text-xs"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                `;
+                tr.appendChild(tdName);
+
+                // Колонки дней (Чекбоксы)
+                let completedCount = 0;
+                
+                habit.checks.forEach((isChecked, dIndex) => {
+                    const td = document.createElement('td');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'custom-checkbox';
+                    checkbox.checked = isChecked;
+                    checkbox.onchange = () => toggleCheck(hIndex, dIndex);
+                    
+                    if(isChecked) completedCount++;
+                    
+                    td.appendChild(checkbox);
+                    tr.appendChild(td);
+                });
+
+                // Колонка прогресса (Справа)
+                const percentage = Math.round((completedCount / DAYS_IN_MONTH) * 100);
+                const tdProgress = document.createElement('td');
+                tdProgress.innerHTML = `
+                    <div class="flex items-center gap-2 justify-center">
+                        <div class="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-indigo-500" style="width: ${percentage}%"></div>
+                        </div>
+                        <span class="text-xs font-mono w-8">${percentage}%</span>
+                    </div>
+                `;
+                tr.appendChild(tdProgress);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // === ЛОГИКА ===
+        function toggleCheck(hIndex, dIndex) {
+            habits[hIndex].checks[dIndex] = !habits[hIndex].checks[dIndex];
+            save();
+            renderTable(); // Перерисовка нужна для обновления прогресс-баров
+            updateStats();
+        }
+
+        function addNewHabit() {
+            const name = prompt("Название привычки (например: Медитация):");
+            if (name) {
+                habits.push({
+                    id: Date.now(),
+                    name: name,
+                    checks: Array(DAYS_IN_MONTH).fill(false)
+                });
+                save();
+                renderTable();
+                updateStats();
+            }
+        }
+
+        function deleteHabit(index) {
+            if(confirm("Удалить эту привычку?")) {
+                habits.splice(index, 1);
+                save();
+                renderTable();
+                updateStats();
+            }
+        }
+
+        function resetData() {
+            if(confirm("Сбросить весь прогресс?")) {
+                habits.forEach(h => h.checks.fill(false));
+                save();
+                renderTable();
+                updateStats();
+            }
         }
 
         function save() {
-            localStorage.setItem('nexus_tasks', JSON.stringify(tasks));
-            render();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
         }
 
-        function addTask() {
-            const text = input.value.trim();
-            if (text) {
-                tasks.unshift({ id: Date.now(), text: text, done: false });
-                input.value = '';
-                save();
-            }
-        }
+        // === СТАТИСТИКА И ГРАФИК ===
+        function updateStats() {
+            // Общий процент
+            let totalChecks = 0;
+            let totalPossible = habits.length * DAYS_IN_MONTH;
+            
+            // Данные для графика (сумма галочек по дням)
+            let dailyCounts = Array(DAYS_IN_MONTH).fill(0);
 
-        // Обработка Enter в поле ввода
-        input.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') addTask();
-        });
-
-        function toggleTask(id) {
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                task.done = !task.done;
-                save();
-            }
-        }
-
-        function deleteTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
-            save();
-        }
-
-        function clearDone() {
-            if(confirm('Удалить все выполненные задачи?')) {
-                tasks = tasks.filter(t => !t.done);
-                save();
-            }
-        }
-
-        function render() {
-            todoList.innerHTML = '';
-            doneList.innerHTML = '';
-
-            let doneCount = 0;
-
-            tasks.forEach(task => {
-                const li = document.createElement('li');
-                li.className = `flex justify-between items-center bg-white/5 p-3 rounded-lg hover:bg-white/10 transition group border border-transparent hover:border-white/10`;
-                
-                li.innerHTML = `
-                    <div class="flex items-center gap-3 flex-1 cursor-pointer" onclick="toggleTask(${task.id})">
-                        <div class="w-5 h-5 rounded border ${task.done ? 'bg-emerald-500 border-emerald-500' : 'border-gray-500 group-hover:border-indigo-400'} flex items-center justify-center transition">
-                            ${task.done ? '<i class="fa-solid fa-check text-xs text-white"></i>' : ''}
-                        </div>
-                        <span class="${task.done ? 'line-through text-gray-500' : 'text-gray-200'}">${task.text}</span>
-                    </div>
-                    <button onclick="deleteTask(${task.id})" class="text-gray-600 hover:text-red-400 p-2 opacity-0 group-hover:opacity-100 transition">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                `;
-
-                if (task.done) {
-                    doneList.appendChild(li);
-                    doneCount++;
-                } else {
-                    todoList.appendChild(li);
-                }
+            habits.forEach(habit => {
+                habit.checks.forEach((checked, index) => {
+                    if(checked) {
+                        totalChecks++;
+                        dailyCounts[index]++;
+                    }
+                });
             });
 
-            // Обновляем прогресс-бар
-            const total = tasks.length;
-            const percent = total === 0 ? 0 : (doneCount / total) * 100;
-            progressBar.style.width = `${percent}%`;
-            
-            // Цвет прогресс-бара
-            if(percent === 100) progressBar.classList.replace('bg-indigo-500', 'bg-emerald-500');
-            else progressBar.classList.replace('bg-emerald-500', 'bg-indigo-500');
+            const globalPercent = totalPossible === 0 ? 0 : Math.round((totalChecks / totalPossible) * 100);
+            document.getElementById('total-percent').textContent = `${globalPercent}%`;
+            document.getElementById('global-progress-bar').style.width = `${globalPercent}%`;
+
+            // Обновляем график Chart.js
+            updateChart(dailyCounts);
         }
 
+        function initChart() {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            
+            // Градиент как в видео (синий)
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Indigo
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+            chartInstance = new Chart(ctx, {
+                type: 'line', // Line chart with fill = Area chart
+                data: {
+                    labels: Array.from({length: DAYS_IN_MONTH}, (_, i) => i + 1),
+                    datasets: [{
+                        label: 'Выполнено привычек',
+                        data: [],
+                        borderColor: '#818cf8',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4, // Плавные линии
+                        pointRadius: 3,
+                        pointBackgroundColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', maxTicksLimit: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart(dataArray) {
+            if(chartInstance) {
+                chartInstance.data.datasets[0].data = dataArray;
+                chartInstance.update();
+            }
+        }
+
+        // Запуск
         init();
     </script>
 </body>
