@@ -3,26 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project: NOIR</title>
+    <title>Detective Board Pro</title>
+    <!-- Иконки -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Один для UI, другой для Нуара -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Special+Elite&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- Подключаем атмосферный шрифт -->
-    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div class="ui-controls">
-        <h1>CASE FILE #001</h1>
-        <button onclick="addNote()">+ ЗАМЕТКА</button>
-        <button onclick="addPhoto()">+ ФОТО</button>
-        <button onclick="toggleConnectMode()" id="connBtn">РЕЖИМ СВЯЗИ: ВЫКЛ</button>
-        <button onclick="clearBoard()" class="danger">ОЧИСТИТЬ ДОСКУ</button>
-        <p class="hint">Перетаскивай элементы. В режиме связи кликни на два элемента, чтобы натянуть красную нить.</p>
+    <!-- Верхняя панель управления -->
+    <div class="toolbar">
+        <div class="brand">🕵️ DETECTIVE BOARD</div>
+        <div class="tools">
+            <button onclick="createNote()" title="Добавить заметку"><i class="fas fa-sticky-note"></i> Текст</button>
+            <button onclick="triggerPhotoUpload()" title="Загрузить фото"><i class="fas fa-image"></i> Фото</button>
+            <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handlePhotoUpload(this)">
+            
+            <div class="divider"></div>
+            
+            <button id="linkBtn" onclick="toggleLinkMode()" title="Режим связи"><i class="fas fa-project-diagram"></i> Связь</button>
+            
+            <div class="divider"></div>
+
+            <button onclick="clearBoard()" class="danger"><i class="fas fa-trash"></i> Очистить</button>
+        </div>
+        <div class="settings">
+            <label class="switch">
+                <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                <span class="slider round"></span>
+            </label>
+            <span class="theme-label">NOIR MODE</span>
+        </div>
     </div>
 
+    <!-- Панель форматирования текста (появляется при клике на заметку) -->
+    <div id="textEditor" class="text-editor-popup hidden">
+        <button onclick="formatText('bold')"><i class="fas fa-bold"></i></button>
+        <button onclick="formatText('italic')"><i class="fas fa-italic"></i></button>
+        <button onclick="formatText('underline')"><i class="fas fa-underline"></i></button>
+        <button onclick="formatText('strikethrough')"><i class="fas fa-strikethrough"></i></button>
+        <div class="divider-v"></div>
+        <button onclick="formatText('justifyLeft')"><i class="fas fa-align-left"></i></button>
+        <button onclick="formatText('justifyCenter')"><i class="fas fa-align-center"></i></button>
+        <div class="divider-v"></div>
+        <button onclick="formatText('formatBlock', 'H2')"><b>H</b></button>
+        <input type="color" onchange="formatText('foreColor', this.value)" title="Цвет текста">
+    </div>
+
+    <!-- Рабочая область -->
     <div id="board" class="board">
-        <!-- SVG слой для красных нитей -->
         <svg id="connections"></svg>
-        <!-- Сюда будут добавляться улики -->
+        <!-- Элементы добавляются JS-ом -->
     </div>
 
     <script src="script.js"></script>
