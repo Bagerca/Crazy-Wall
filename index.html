@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: NOIR</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Подключаем атмосферный шрифт -->
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="ui-controls">
+        <h1>CASE FILE #001</h1>
+        <button onclick="addNote()">+ ЗАМЕТКА</button>
+        <button onclick="addPhoto()">+ ФОТО</button>
+        <button onclick="toggleConnectMode()" id="connBtn">РЕЖИМ СВЯЗИ: ВЫКЛ</button>
+        <button onclick="clearBoard()" class="danger">ОЧИСТИТЬ ДОСКУ</button>
+        <p class="hint">Перетаскивай элементы. В режиме связи кликни на два элемента, чтобы натянуть красную нить.</p>
+    </div>
+
+    <div id="board" class="board">
+        <!-- SVG слой для красных нитей -->
+        <svg id="connections"></svg>
+        <!-- Сюда будут добавляться улики -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
